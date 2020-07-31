@@ -7,11 +7,12 @@ public class Server {
     	
     	int portNumber = 4444; 
         boolean listening = true;
-         
+        Protocol proto = new Protocol();
+        
         try (ServerSocket serverSocket = new ServerSocket(portNumber)) { 
             while (listening) {
             	System.out.println("Listening and stuff at port: " + portNumber);
-                new ServerThread(serverSocket.accept()).start();			//.start() Kör Run() i ServerThread
+                new ServerThread(serverSocket.accept(), proto).start();			//.start() Kör Run() i ServerThread
             }
         } catch (IOException e) {
             System.err.println("Could not listen on port " + portNumber);

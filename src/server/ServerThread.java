@@ -6,18 +6,21 @@ import java.io.*;
  
 public class ServerThread extends Thread {
     private Socket socket = null;
+    private Protocol proto;
  
-    public ServerThread(Socket socket) {
+    public ServerThread(Socket socket, Protocol proto) {
         super("ServerThread");
         this.socket = socket;
+        this.proto = proto;
     }
      
     public void run() {
-        	DataOutputStream out = new DataOutputStream(socket.getOutputStream());
-        	DataInputStream in2 = new DataInputStream(socket.getInputStream());
-            BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+        	
+			try {
+				DataOutputStream out = new DataOutputStream(socket.getOutputStream());
+	        	DataInputStream in2 = new DataInputStream(socket.getInputStream());
+	            BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             String inputLine, outputLine;
-            Protocol proto = new Protocol();
             //inputLine = in.readUTF();
            /* System.out.println(inputLine);
             outputLine = proto.processInput(inputLine);
@@ -36,5 +39,9 @@ public class ServerThread extends Thread {
                 }
             }
             socket.close();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
     }
 }
