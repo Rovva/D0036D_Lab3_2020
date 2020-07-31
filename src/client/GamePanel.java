@@ -7,6 +7,9 @@ import java.util.Observable;
 import java.util.Observer;
 
 import javax.swing.JPanel;
+
+import shared.GameState;
+
 import java.awt.*;
 import javax.swing.*;
 public class GamePanel extends JPanel implements Observer {

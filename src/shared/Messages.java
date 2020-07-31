@@ -1,4 +1,4 @@
-package client;
+package shared;
 
 public enum Messages {
 	JOIN,
@@ -7,6 +7,7 @@ public enum Messages {
 	CANNOT_MOVE,
 	ERROR
 }
+
 /*
 JOIN			Response: ID joined
 LEAVE			Response: ID left

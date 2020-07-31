@@ -13,10 +13,11 @@ import java.util.Observer;
 import javax.swing.*;
 
 import client.Model;
+import shared.GameState;
 
 public class GUI implements Observer, ActionListener {
 	
-	Model mod;
+	Model model;
 	GameState gameState;
 	GamePanel gamePanel;
 	
@@ -25,10 +26,10 @@ public class GUI implements Observer, ActionListener {
 	SpringLayout layout;
 	Container contentPane;
 	
-	int x_size = 300, y_size = 300;
+	int x_size = 500, y_size = 500;
 	
 	public GUI(Model mod, GameState gameState) {
-		this.mod = mod;
+		this.model = mod;
 		this.gameState = gameState;
 		frame = new JFrame("Stickman Tournament");
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -74,19 +75,66 @@ public class GUI implements Observer, ActionListener {
 	public void actionPerformed(ActionEvent arg0) {
 		String op = arg0.getActionCommand();
 		if(op == "Connect") {
-			String ipadress = JOptionPane.showInputDialog(frame,
-                    "Address:port", null);
+			//String ipadress = JOptionPane.showInputDialog(frame,
+            //        "Address:port", null);
 			try {
-				mod.connectToServer(ipadress);
+				model.connectToServer("127.0.0.1:4444");
+				model.sendJoin();
+				initKeys();
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}
 	}
-	
+    private void initKeys() {
+    	this.addMoveListener(
+    			new KeyListener() {
+    				@Override
+    				public void keyPressed(KeyEvent ke) {
+    			        int keyCode = ke.getKeyCode();
+    			        int direction = 0;
+    			        if(keyCode == KeyEvent.VK_LEFT) {
+    			        	System.out.println("Left");
+    			        	//gameState.movePlayer(1);
+    			        	direction = 1;
+    			        } else if(keyCode == KeyEvent.VK_UP) {
+    			        	System.out.println("UP");
+    			        	//gameState.movePlayer(2);
+    			        	direction = 2;
+    			        } else if(keyCode == KeyEvent.VK_RIGHT) {
+    			        	System.out.println("Right");
+    			        	//gameState.movePlayer(3);
+    			        	direction = 3;
+    			        } else if(keyCode == KeyEvent.VK_DOWN) {
+    			        	System.out.println("Down");
+    			        	//gameState.movePlayer(4);
+    			        	direction = 4;
+    			        }
+			        	try {
+							model.sendMove(direction);
+						} catch (IOException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+    			      }
+
+					@Override
+					public void keyReleased(KeyEvent arg0) {
+						// TODO Auto-generated method stub
+						
+					}
+
+					@Override
+					public void keyTyped(KeyEvent arg0) {
+						// TODO Auto-generated method stub
+						
+					}
+    			});
+    }
 	@Override
 	public void update(Observable arg0, Object arg1) {
 		// TODO Auto-generated method stub
+		frame.repaint();
 	}
 }

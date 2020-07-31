@@ -1,10 +1,8 @@
-package client;
+package shared;
 
 import java.awt.Point;
 import java.util.ArrayList;
 import java.util.Observable;
-
-import client.Player;
 
 public class GameState extends Observable {
 		
@@ -21,19 +19,33 @@ public class GameState extends Observable {
 		return PLAYER_SIZE;
 	}
 	
+	public int numberOfPlayers() {
+		return this.players.size();
+	}
+	
 	public ArrayList<Player> getPlayers() {
 		return this.players;
 	}
 	
-	public void newPlayer() {
+	public void newPlayer(int ID, Point location) {
+		this.players.add(new Player(ID, location));
+		System.out.println(players.size());
+		setChanged();
+        notifyObservers();
+	}
+	
+	public void removePlayer(int ID) {
 		
 	}
 	
-	public void removePlayer() {
-		
+	public void movePlayer(int id, int x, int y) {
+		getPlayers().get(id).setLocation(new Point(x, y));
+		setChanged();
+        notifyObservers();
 	}
 	
-	public void movePlayer(int id, int direction) {
+	/*
+	public void movePlayer(int id, int x, int y) {
 		int x,y;
 		x = getPlayers().get(id).getLocation().x;
 		y = getPlayers().get(id).getLocation().y;
@@ -46,8 +58,5 @@ public class GameState extends Observable {
 		} else if(direction == 4) {
 			y = y + 1;
 		}
-		getPlayers().get(id).setLocation(new Point(x, y));
-		setChanged();
-        notifyObservers();
-	}
+	}*/
 }

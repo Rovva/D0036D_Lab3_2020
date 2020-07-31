@@ -8,6 +8,9 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.Observable;
 
+import shared.GameState;
+import shared.Messages;
+
 public class Model extends Observable {
 	
     String fromServer;
@@ -15,6 +18,8 @@ public class Model extends Observable {
     Socket socket;
     DataOutputStream out;
     DataInputStream in;
+    
+    int playerID;
     
     GameState gameState;
     
@@ -48,5 +53,26 @@ public class Model extends Observable {
                 hostName);
             System.exit(1);
         }
+	}
+	
+	public void sendJoin() throws IOException {
+		String message = "JOIN";
+		out.writeUTF(message);
+		String answer = in.readUTF();
+		System.out.println(answer);
+		String[] playerValues = answer.split(" ");
+		gameState.newPlayer(Integer.parseInt(playerValues[1]), new Point(Integer.parseInt(playerValues[2]), Integer.parseInt(playerValues[3])));
+		this.playerID = Integer.parseInt(playerValues[1]);
+	}
+	
+	public void sendMove(int direction) throws IOException {
+		String message = "MOVE_REQ " + String.valueOf(this.playerID) + " " + String.valueOf(direction);
+		out.writeUTF(message);
+		String answer = in.readUTF();
+		System.out.println(answer);
+		String[] moveValues = answer.split(" ");
+		if(moveValues[0].contains("MOVE")) {
+			gameState.movePlayer(Integer.parseInt(moveValues[1]), Integer.parseInt(moveValues[2]), Integer.parseInt(moveValues[3]));
+		}
 	}
 }
