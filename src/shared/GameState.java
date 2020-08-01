@@ -39,7 +39,11 @@ public class GameState extends Observable {
 	}
 	
 	public void movePlayer(int id, int x, int y) {
-		getPlayers().get(id).setLocation(new Point(x, y));
+		for(int i = 0; i < players.size(); i++) {
+			if(players.get(i).getID() == id) {
+				players.get(i).setLocation(new Point(x, y));
+			}
+		}
 		setChanged();
         notifyObservers();
 	}

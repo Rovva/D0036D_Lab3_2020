@@ -17,9 +17,8 @@ public class ServerThread extends Thread {
     public void run() {
         	
 			try {
-				DataOutputStream out = new DataOutputStream(socket.getOutputStream());
-	        	DataInputStream in2 = new DataInputStream(socket.getInputStream());
-	            BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+			DataOutputStream out = new DataOutputStream(socket.getOutputStream());
+	        DataInputStream in = new DataInputStream(socket.getInputStream());
             String inputLine, outputLine;
             //inputLine = in.readUTF();
            /* System.out.println(inputLine);
@@ -28,7 +27,7 @@ public class ServerThread extends Thread {
             out.flush();
             */
             for(;;) {
-                inputLine = in2.readUTF();
+                inputLine = in.readUTF();
                 if(inputLine != null) {
                     System.out.println(inputLine);
                     outputLine = proto.processInput(inputLine);

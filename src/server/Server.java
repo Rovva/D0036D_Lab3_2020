@@ -3,11 +3,14 @@ import java.net.*;
 import java.io.*;
  
 public class Server {
+	
+	static Protocol proto;
+	
     public static void main(String[] args) throws IOException {
     	
     	int portNumber = 4444; 
         boolean listening = true;
-        Protocol proto = new Protocol();
+        proto = new Protocol();
         
         try (ServerSocket serverSocket = new ServerSocket(portNumber)) { 
             while (listening) {
@@ -19,4 +22,9 @@ public class Server {
             System.exit(-1);
         }
     }
+    
+    public void test() {
+    	
+    }
+    
 }
