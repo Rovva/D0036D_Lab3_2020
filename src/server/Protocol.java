@@ -3,15 +3,45 @@ package server;
 import shared.GameState;
 
 import java.awt.Point;
+import java.io.IOException;
+import java.net.ServerSocket;
 import java.util.ArrayList;
 import java.util.Random;
+import server.ServerThread;
 
 public class Protocol {
 	
 	GameState serverGameState;
+	int portNumber;
+	ArrayList<ServerThread> threads;
 	
-	public Protocol() {
+	public Protocol(int portNumber) {
 		serverGameState = new GameState(30);
+		this.portNumber = portNumber;
+		this.threads = new ArrayList<ServerThread>();
+		startServer();
+	}
+	
+	private void startServer() {
+		boolean listening = true;
+		try (ServerSocket serverSocket = new ServerSocket(this.portNumber)) { 
+			int i = 0;
+            while (listening) {
+            	System.out.println("Listening and stuff at port: " + this.portNumber);
+                threads.add(new ServerThread(serverSocket.accept(), this));			//.start() Kör Run() i ServerThread
+                threads.get(i).start();
+                i++;
+            }
+        } catch (IOException e) {
+            System.err.println("Could not listen on port " + this.portNumber);
+            System.exit(-1);
+        }
+	}
+	
+	private void sendToAll(String message) throws IOException {
+		for(int i = 0; i < threads.size(); i++) {
+			threads.get(i).sendMessage(message);
+		}
 	}
 	
 	private String newPlayer() {
@@ -36,21 +66,25 @@ public class Protocol {
 				originalY = serverGameState.getPlayers().get(i).getLocation().y;
 			}
 		}
-		
+		newX = originalX;
+		newY = originalY;
 		if(direction == 1) {
-			newX = originalX - 1;
+			//newX = originalX - 1;
+			newX--;
 		} else if(direction == 2) {
-			newY = originalY - 1;
+			//newY = originalY - 1;
+			newY--;
 		} else if(direction == 3) {
-			newX = originalX + 1;
+			//newX = originalX + 1;
+			newX++;
 		} else if(direction == 4) {
-			newY = originalY + 1;
+			//newY = originalY + 1;
+			newY++;
 		}
 		
 		for(int i = 0; i < serverGameState.numberOfPlayers(); i++) {
-			if(serverGameState.getPlayers().get(i).getLocation().x == newX) {
-				return false;
-			} else if(serverGameState.getPlayers().get(i).getLocation().y == newY) {
+			if(serverGameState.getPlayers().get(i).getLocation().x == newX && 
+					serverGameState.getPlayers().get(i).getLocation().y == newY) {
 				return false;
 			}
 		}
@@ -96,22 +130,23 @@ public class Protocol {
 		
 	}
 	
-    public String processInput(String theInput) {
+    public void processInput(String theInput, ServerThread lol) throws IOException {
     	System.out.println("Server got: " + theInput);
     	String[] message = theInput.split(" ");
     	if(theInput.contains("_JOIN_")) {
     		String newplayer = newPlayer();
     		String returnvalue = "_NEWPLAYER_ " + newplayer;
     		System.out.println("Server: " + returnvalue);
-    		return returnvalue;
+    		sendToAll(returnvalue);
     	} else if(message[0].contains("_MOVE_REQ_")) {
     		String[] split = theInput.split(" ");
     		if(canPlayerMove(Integer.parseInt(split[1]), Integer.parseInt(split[2]))) {
     			String moveplayer = movePlayer(Integer.parseInt(split[1]), Integer.parseInt(split[2]));
     			System.out.println("_MOVE_ " + moveplayer);
-    			return "_MOVE_ " + moveplayer;
+    			sendToAll("_MOVE_ " + moveplayer);
     		}
     	}
-		return null;
     }
+    
+    
 }
