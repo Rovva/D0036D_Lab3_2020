@@ -12,12 +12,12 @@ import java.util.Observer;
 
 import javax.swing.*;
 
-import client.Model;
+import client.Controller;
 import shared.GameState;
 
 public class GUI implements Observer, ActionListener {
 	
-	Model model;
+	Controller controller;
 	GameState gameState;
 	GamePanel gamePanel;
 	
@@ -28,8 +28,8 @@ public class GUI implements Observer, ActionListener {
 	
 	int x_size = 500, y_size = 500;
 	
-	public GUI(Model mod, GameState gameState) {
-		this.model = mod;
+	public GUI(Controller controller, GameState gameState) {
+		this.controller = controller;
 		this.gameState = gameState;
 		frame = new JFrame("Stickman Tournament");
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -78,8 +78,8 @@ public class GUI implements Observer, ActionListener {
 			//String ipadress = JOptionPane.showInputDialog(frame,
             //        "Address:port", null);
 			try {
-				model.connectToServer("127.0.0.1:4444");
-				model.sendJoin();
+				controller.Connect("127.0.0.1:4444");
+				controller.sendJoin();
 				initKeys();
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
@@ -112,7 +112,7 @@ public class GUI implements Observer, ActionListener {
     			        	direction = 4;
     			        }
 			        	try {
-							model.sendMove(direction);
+							controller.sendMove(direction);
 						} catch (IOException e) {
 							// TODO Auto-generated catch block
 							e.printStackTrace();
