@@ -4,6 +4,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.*;
+import java.util.Observable;
 import java.util.concurrent.TimeUnit;
 import java.awt.Point;
 import java.awt.event.ActionEvent;
@@ -15,7 +16,7 @@ import java.awt.event.KeyListener;
 import client.GUI;
 import shared.GameState;
 
-public class Controller {
+public class Controller extends Observable {
 	
 	GameState gameState;
     GUI gui;
@@ -70,8 +71,8 @@ public class Controller {
 				int newID = Integer.parseInt(temp[1]);
 				int newX = Integer.parseInt(temp[2]);
 				int newY = Integer.parseInt(temp[3]);
-				System.out.println("Adding " + newID + " " + newX + " " + newY);
-				this.state.newPlayer(newID, new Point(newX, newY));
+				//System.out.println("Adding " + newID + " " + newX + " " + newY);
+				//this.state.newPlayer(newID, new Point(newX, newY));
 				
 			} else if(message[0].contains("_MOVE_")) {
 				String[] moveValues = input.split(" ");
@@ -83,10 +84,21 @@ public class Controller {
 					this.state.movePlayer(moveID, moveX, moveY);
 				} else {
 					System.out.println("Adding " + moveID + " " + moveX + " " + moveY);
-					this.state.newPlayer(moveID, new Point(moveX, moveY));
-					this.state.movePlayer(moveID, moveX, moveY);
+					//this.state.newPlayer(moveID, new Point(moveX, moveY));
+				}
+			} else if(message[0].contains("_RESET_")) {
+				String[] resetValues = input.split(" ");
+				int resetID = Integer.parseInt(resetValues[1]);
+				int resetX = Integer.parseInt(resetValues[2]);
+				int resetY = Integer.parseInt(resetValues[3]);
+				if(!checkIfExist(resetID)) {
+					this.state.newPlayer(resetID, new Point(resetX, resetY));
+				} else {
+					this.state.movePlayer(resetID, resetX, resetY);
 				}
 			}
+			setChanged();
+			notifyObservers();
 		}
 		
 		public void run() {

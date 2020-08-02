@@ -38,14 +38,12 @@ public class GamePanel extends JPanel implements Observer {
 	}
 	
 	private void paintCircles(Graphics g) {
-		System.out.println(gameState.numberOfPlayers());
 		for(int i = 0; i < gameState.numberOfPlayers(); i++) {
 			if(gameState.getPlayers().get(i).getID() == gameState.getPlayerID()) {
 				g.setColor(Color.blue);
 			} else {
 				g.setColor(Color.red);
 			}
-			System.out.println("Drawing id:" + gameState.getPlayers().get(i).getID());
 			g.fillOval((this.getWidth()/gameState.getPlayerSize())*gameState.getPlayers().get(i).getLocation().x,
 					(this.getHeight()/gameState.getPlayerSize())*gameState.getPlayers().get(i).getLocation().y,
 					(this.getWidth()/gameState.getPlayerSize()),

@@ -118,15 +118,27 @@ public class Protocol {
 		return ID + " " + newX + " " + newY;
 	}
 	
-	public void resetGame() {
-		int x = 0, y = 0;
+	public void resetGame() throws IOException {
+		int x = 0, lastX = 0, y = 0, lastY = 0, ID = 0;
+		ArrayList<Integer> listX = new ArrayList<Integer>();
+		ArrayList<Integer> listY = new ArrayList<Integer>();
 		Random rand = new Random();
 		ArrayList<Point> placesTaken = new ArrayList<Point>();
 		for(int i = 0; i < serverGameState.numberOfPlayers(); i++) {
 			x = rand.nextInt(30);
 			y = rand.nextInt(30);
+			listX.add(x);
+			listY.add(y);
 			placesTaken.add(new Point(x, y));
 		}
+		
+		for(int i = 0; i < serverGameState.numberOfPlayers(); i++) {
+			ID = serverGameState.getPlayers().get(i).getID();
+			serverGameState.getPlayers().get(i).setLocation(placesTaken.get(i));
+			sendToAll("_RESET_ " + String.valueOf(ID) + " " + String.valueOf(listX.get(i)) + 
+					" " + String.valueOf(listY.get(i)));
+		}
+		
 		
 	}
 	
@@ -138,6 +150,7 @@ public class Protocol {
     		String returnvalue = "_NEWPLAYER_ " + newplayer;
     		System.out.println("Server: " + returnvalue);
     		sendToAll(returnvalue);
+    		resetGame();
     	} else if(message[0].contains("_MOVE_REQ_")) {
     		String[] split = theInput.split(" ");
     		if(canPlayerMove(Integer.parseInt(split[1]), Integer.parseInt(split[2]))) {
