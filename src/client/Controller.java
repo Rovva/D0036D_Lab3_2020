@@ -93,6 +93,8 @@ public class Controller extends Observable {
 				} else {
 					this.state.newPlayer(moveID, new Point(moveX, moveY));
 				}
+			} else if(data[0] == Messages.PLAYER_HIT.ordinal()) {
+				
 			} else if(data[0] == Messages.RESET.ordinal()) {
 				int resetID = (int) data[1];
 				int resetX = (int) data[2];
@@ -169,6 +171,13 @@ public class Controller extends Observable {
 	public void sendLeave() throws IOException {
 		byte[] data = new byte[2];
 		data[0] = (byte) Messages.LEAVE.ordinal();
+		data[1] = (byte) gameState.getPlayerID();
+		out.write(data);
+	}
+	
+	public void sendHit() throws IOException {
+		byte[] data = new byte[2];
+		data[0] = (byte) Messages.PLAYER_HIT.ordinal();
 		data[1] = (byte) gameState.getPlayerID();
 		out.write(data);
 	}

@@ -59,4 +59,28 @@ public class GameState extends Observable {
 		setChanged();
         notifyObservers();
 	}
+	
+	public void killPlayer(int ID) {
+		for(int i = 0; i < players.size(); i++) {
+			if(players.get(i).getID() == ID) {
+				players.get(i).setDead();
+			}
+		}
+	}
+	
+	public void revivePlayer(int ID) {
+		for(int i = 0; i < players.size(); i++) {
+			if(players.get(i).getID() == ID) {
+				players.get(i).setLiving();
+			}
+		}
+	}
+	
+	public void checkDead(int ID) {
+		for(int i = 0; i < players.size(); i++) {
+			if(players.get(i).getID() == ID) {
+				
+			}
+		}
+	}
 }
