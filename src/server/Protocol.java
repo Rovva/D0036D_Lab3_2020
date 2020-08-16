@@ -29,7 +29,7 @@ public class Protocol {
 			int i = 0;
             while (listening) {
             	System.out.println("Listening and stuff at port: " + this.portNumber);
-                threads.add(new ServerThread(serverSocket.accept(), this));			//.start() Kör Run() i ServerThread
+                threads.add(new ServerThread(serverSocket.accept(), this));
                 threads.get(i).start();
                 i++;
             }
@@ -52,16 +52,13 @@ public class Protocol {
 		x = randX.nextInt(30);
 		y = randY.nextInt(30);
 		ID = serverGameState.numberOfPlayers();
-		System.out.println("THE ID IS " + ID);
 		serverGameState.newPlayer(ID, new Point(x, y));
-		//int[] returnvalue = {ID, x, y};
 		byte[] data = new byte[4];
 		data[0] = (byte) Messages.JOIN.ordinal();
 		data[1] = (byte) ID;
 		data[2] = (byte) x;
 		data[3] = (byte) y;
 		return data;
-		//return String.valueOf(ID) + " " + String.valueOf(x) + " " + String.valueOf(y);
 	}
 	
 	private boolean canPlayerMove(int ID, int direction) {
@@ -76,16 +73,12 @@ public class Protocol {
 		newX = originalX;
 		newY = originalY;
 		if(direction == 1) {
-			//newX = originalX - 1;
 			newX--;
 		} else if(direction == 2) {
-			//newY = originalY - 1;
 			newY--;
 		} else if(direction == 3) {
-			//newX = originalX + 1;
 			newX++;
 		} else if(direction == 4) {
-			//newY = originalY + 1;
 			newY++;
 		}
 		
@@ -125,6 +118,14 @@ public class Protocol {
 		return returnValue;
 	}
 	
+	public void removePlayer(int ID) {
+		for(int i = 0; i < serverGameState.numberOfPlayers(); i++) {
+			if(serverGameState.getPlayers().get(i).getID() == ID) {
+				serverGameState.removePlayer(i);
+			}
+		}
+	}
+	
 	public void resetGame() throws IOException {
 		int x = 0, lastX = 0, y = 0, lastY = 0, ID = 0;
 		ArrayList<Integer> listX = new ArrayList<Integer>();
@@ -147,26 +148,18 @@ public class Protocol {
 			sendValues[2] = (byte) listX.get(i).byteValue();
 			sendValues[3] = (byte) listY.get(i).byteValue();
 			sendToAll(sendValues);
-			//sendToAll("_RESET_ " + String.valueOf(ID) + " " + String.valueOf(listX.get(i)) + 
-			//		" " + String.valueOf(listY.get(i)));
 		}
 		
 		
 	}
 	
-    public void processInput(byte[] data, ServerThread lol) throws IOException {
-    	System.out.println("Server got: " + (int) data[0]);
-    	//String[] message = theInput.split(" ");
-    	
-    	if((int) data[0] == Messages.JOIN.ordinal()) {
+    public void processInput(byte[] data, ServerThread thread) throws IOException {
+    	if(data[0] == Messages.JOIN.ordinal()) {
     		System.out.println("Adding new player...");
     		byte[] newplayer = newPlayer();
-    		//String returnvalue = "_NEWPLAYER_ " + newplayer;
-    		//System.out.println("Server: " + returnvalue);
     		sendToAll(newplayer);
     		resetGame();
-    	} else if((int) data[0] == Messages.MOVE.ordinal()) {
-    		
+    	} else if(data[0] == Messages.MOVE.ordinal()) {
     		if(canPlayerMove((int) data[1], (int) data[2])) {
     			byte[] temp = new byte[3];
     			byte[] movePlayer = new byte[4];
@@ -177,13 +170,14 @@ public class Protocol {
     			movePlayer[3] = temp[2];
     			sendToAll(movePlayer);
     		}
-    		
-    		//String[] split = theInput.split(" ");
-    		//if(canPlayerMove(Integer.parseInt(split[1]), Integer.parseInt(split[2]))) {
-    		//	String moveplayer = movePlayer(Integer.parseInt(split[1]), Integer.parseInt(split[2]));
-    		//	System.out.println("_MOVE_ " + moveplayer);
-    			//sendToAll("_MOVE_ " + moveplayer);
-    	//	}
+    	} else if(data[0] == Messages.LEAVE.ordinal()) {
+    		byte[] temp = new byte[2];
+    		temp[0] = (byte) Messages.LEAVE.ordinal();
+    		temp[1] = data[1];
+    		sendToAll(temp);
+    		removePlayer((int) data[1]);
+    		thread.stopThread();
+    		resetGame();
     	}
     }
     

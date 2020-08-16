@@ -27,11 +27,13 @@ public class Controller extends Observable {
     DataOutputStream out;
     DataInputStream in;
     
+    messageReader messages;
+    Thread thread;
+    
     public Controller(int PLAYER_SIZE) {
     	this.PLAYER_SIZE = PLAYER_SIZE;
     	gameState = new GameState(PLAYER_SIZE);
     	gui = new GUI(this, gameState);
-    	//initKeys();
     }
     
 	void Connect(String ipPort) throws IOException { 
@@ -55,10 +57,19 @@ public class Controller extends Observable {
             System.exit(1);
         }
 	}
+	
+	void Disconnect() throws IOException {
+		messages.runThread = false;
+		this.sendLeave();
+		out.close();
+		in.close();
+		socket.close();
+	}
 
 	public class messageReader implements Runnable {
 		DataInputStream in;
 		GameState state;
+		volatile boolean runThread;
 		
 		public messageReader(DataInputStream in, GameState state) {
 			this.in = in;
@@ -66,108 +77,58 @@ public class Controller extends Observable {
 		}
 		
 		public void messageProcessor(byte[] data) {
-			//String[] message = input.split(" ");
-			if((int) data[0] == Messages.JOIN.ordinal()) {
-				
-				System.out.println("Adding in client: " + (int) data[1] + " " + (int) data[2] + " " + (int) data[3]);
+			if(data[0] == Messages.JOIN.ordinal()) {
 				
 				int newID = data[1];
 				int newX = data[2];
 				int newY = data[3];
 				
 				this.state.newPlayer(newID, new Point(newX, newY));
-				/*
-				String[] temp = input.split(" ");
-				int newID = Integer.parseInt(temp[1]);
-				int newX = Integer.parseInt(temp[2]);
-				int newY = Integer.parseInt(temp[3]);
-				System.out.println("Adding " + newID + " " + newX + " " + newY);
-				this.state.newPlayer(newID, new Point(newX, newY));
-				*/
-			} else if((int) data[0] == Messages.PLAYER_MOVED.ordinal()) {
+			} else if(data[0] == Messages.PLAYER_MOVED.ordinal()) {
 				int moveID = (int) data[1];
 				int moveX = (int) data[2];
 				int moveY = (int) data[3];
-				System.out.println(checkIfExist(moveID));
 				if(checkIfExist(moveID)) {
 					this.state.movePlayer(moveID, moveX, moveY);
 				} else {
-					System.out.println("Adding in client: " + moveID + " " + moveX + " " + moveY);
 					this.state.newPlayer(moveID, new Point(moveX, moveY));
 				}
-				
-				/*
-				String[] moveValues = input.split(" ");
-				int moveID = Integer.parseInt(moveValues[1]);
-				int moveX = Integer.parseInt(moveValues[2]);
-				int moveY = Integer.parseInt(moveValues[3]);
-				System.out.println(checkIfExist(moveID));
-				if(checkIfExist(moveID)) {
-					this.state.movePlayer(moveID, moveX, moveY);
-				} else {
-					System.out.println("Adding " + moveID + " " + moveX + " " + moveY);
-					//this.state.newPlayer(moveID, new Point(moveX, moveY));
-				}
-				*/
 			} else if(data[0] == Messages.RESET.ordinal()) {
 				int resetID = (int) data[1];
 				int resetX = (int) data[2];
 				int resetY = (int) data[3];
-				System.out.println(checkIfExist(resetID));
 				if(!checkIfExist(resetID)) {
 					this.state.newPlayer(resetID, new Point(resetX, resetY));
 				} else {
 					this.state.movePlayer(resetID, resetX, resetY);
 				}
-				
-				/*
-				String[] resetValues = input.split(" ");
-				int resetID = Integer.parseInt(resetValues[1]);
-				int resetX = Integer.parseInt(resetValues[2]);
-				int resetY = Integer.parseInt(resetValues[3]);
-				if(!checkIfExist(resetID)) {
-					this.state.newPlayer(resetID, new Point(resetX, resetY));
-				} else {
-					this.state.movePlayer(resetID, resetX, resetY);
-				}
-				*/
 			} else if(data[0] == Messages.LEAVE.ordinal()) {
 				int leaveID = data[1];
-				if(checkIfExist(leaveID));
-				
-				/*
-				String[] leaveValues = input.split(" ");
-				int leaveID = Integer.parseInt(leaveValues[1]);
 				if(checkIfExist(leaveID)) {
 					this.state.removePlayer(leaveID);
 				}
-				*/
 			}
 			setChanged();
 			notifyObservers();
 		}
 		
 		public void run() {
-        //String inputLine;
-        byte[] data = new byte[4];
-		System.out.println("Starting messageReader...");
-        for(;;) {
-            try {
-				/*inputLine = in.readUTF();
-	            if(inputLine != null) {
-	                System.out.println(inputLine);
-	                messageProcessor(inputLine);
-	            }*/
-	            in.read(data);
-	            if(data != null) {
-	            	System.out.println(data);
-	            	messageProcessor(data);
-	            }
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-            }
+	        byte[] data = new byte[4];
+			System.out.println("Starting messageReader...");
+			this.runThread = true;
+	        while(runThread) {
+	        	if(!socket.isClosed()) {
+		            try {
+			            in.read(data);
+			            if(data != null) {
+			            	messageProcessor(data);
+			            }
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						//e.printStackTrace();
+					}
+	        	}
+	        }
         }
 	}
 	
@@ -181,19 +142,10 @@ public class Controller extends Observable {
 	}
 	
 	public void sendJoin() throws IOException {
-
-		//String message = "_JOIN_";
 		out.writeByte(Messages.JOIN.ordinal());
-		//out.writeUTF(message);
-		//String answer = in.readUTF();
 		byte[] data = new byte[4];
 		in.read(data);
 		System.out.println("Recieved after join: " + data[0] + " " + data[1] + " " + data[2]);
-		//String[] playerValues = answer.split(" ");
-		//int playerID = Integer.parseInt(playerValues[1]);
-		//int playerX = Integer.parseInt(playerValues[2]);
-		//int playerY = Integer.parseInt(playerValues[3]);
-
 		int playerID = data[1];
 		int playerX = data[2];
 		int playerY = data[3];
@@ -201,16 +153,23 @@ public class Controller extends Observable {
 		gameState.newPlayer(playerID, new Point(playerX, playerY));
 		gameState.setPlayerID(playerID);
 		
-        new Thread(new messageReader(this.in, this.gameState)).start();
+		messages = new messageReader(this.in, this.gameState);
+		thread = new Thread(messages);
+		thread.start();
 	}
 	
 	public void sendMove(int direction) throws IOException {
-		//String message = "_MOVE_REQ_ " + String.valueOf(gameState.getPlayerID()) + " " + String.valueOf(direction);
-		//out.writeUTF(message);
 		byte[] data = new byte[4];
 		data[0] = (byte) Messages.MOVE.ordinal();
 		data[1] = (byte) gameState.getPlayerID();
 		data[2] = (byte) direction;
+		out.write(data);
+	}
+	
+	public void sendLeave() throws IOException {
+		byte[] data = new byte[2];
+		data[0] = (byte) Messages.LEAVE.ordinal();
+		data[1] = (byte) gameState.getPlayerID();
 		out.write(data);
 	}
 	

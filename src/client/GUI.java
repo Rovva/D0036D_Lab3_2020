@@ -14,12 +14,14 @@ import javax.swing.*;
 
 import client.Controller;
 import shared.GameState;
+import client.ConnectWindow;
 
 public class GUI implements Observer, ActionListener {
 	
 	Controller controller;
 	GameState gameState;
 	GamePanel gamePanel;
+	ConnectWindow connectWindow;
 	
 	JFrame frame;
 	JPanel panel;
@@ -33,7 +35,7 @@ public class GUI implements Observer, ActionListener {
 	public GUI(Controller controller, GameState gameState) {
 		this.controller = controller;
 		this.gameState = gameState;
-		frame = new JFrame("Stickman Tournament");
+		frame = new JFrame("Arena of death");
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.setSize(x_size, y_size);
 		frame.setVisible(true);
@@ -63,13 +65,17 @@ public class GUI implements Observer, ActionListener {
 		this.gamePanel = new GamePanel(gameState);
 		this.contentPane.add(gamePanel);
 		this.gamePanel.setFocusable(true);
+		this.gamePanel.setVisible(false);
 
         gameState.addObserver(gamePanel);
         gameState.addObserver(this);
         
 		this.layout.putConstraint(SpringLayout.NORTH, gamePanel, 5, SpringLayout.SOUTH, connectButton);
+		connectWindow = new ConnectWindow();
+		connectWindow.setInvisible();
+		connectWindow.getConnectButton().addActionListener(this);
+		connectWindow.getCancelButton().addActionListener(this);
 	}
-	/**/
 	
 	public void addMoveListener(KeyListener movelistener) {
 		gamePanel.grabFocus();
@@ -80,20 +86,33 @@ public class GUI implements Observer, ActionListener {
 	public void actionPerformed(ActionEvent arg0) {
 		String op = arg0.getActionCommand();
 		if(op == "Connect") {
-			//String ipadress = JOptionPane.showInputDialog(frame,
-            //        "Address:port", null);
+			connectWindow.setVisible();
+		} else if(op == "Disconnect") {
 			try {
-				controller.Connect("127.0.0.1:4444");
+				controller.Disconnect();
+				connectButton.setEnabled(true);
+				disconnectButton.setEnabled(false);
+				gamePanel.setVisible(false);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		} else if(op == "Join") {
+			String addressField = connectWindow.getTextField().getText();
+			try {
+				controller.Connect(addressField);
 				controller.sendJoin();
 				connectButton.setEnabled(false);
 				disconnectButton.setEnabled(true);
+				gamePanel.setVisible(true);
+				connectWindow.setInvisible();
 				initKeys();
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-		} else if(op == "Disconnect") {
-			
+		} else if(op == "Cancel") {
+			connectWindow.setInvisible();
 		}
 	}
     private void initKeys() {
@@ -124,7 +143,7 @@ public class GUI implements Observer, ActionListener {
 							controller.sendMove(direction);
 						} catch (IOException e) {
 							// TODO Auto-generated catch block
-							e.printStackTrace();
+							//e.printStackTrace();
 						}
     			      }
 
