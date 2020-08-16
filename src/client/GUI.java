@@ -25,6 +25,8 @@ public class GUI implements Observer, ActionListener {
 	JPanel panel;
 	SpringLayout layout;
 	Container contentPane;
+	JButton connectButton;
+	JButton disconnectButton;
 	
 	int x_size = 500, y_size = 500;
 	
@@ -40,14 +42,17 @@ public class GUI implements Observer, ActionListener {
 		contentPane.setLayout(layout);
 		contentPane.setBackground(Color.WHITE);
 
-		JButton connectButton = new JButton("Connect");
-		JButton disconnectButton = new JButton("Disconnect");
+		this.connectButton = new JButton("Connect");
+		this.disconnectButton = new JButton("Disconnect");
 		
 		this.contentPane.add(connectButton);
 		this.contentPane.add(disconnectButton);
 		
 		connectButton.addActionListener(this);
 		disconnectButton.addActionListener(this);
+
+		connectButton.setEnabled(true);
+		disconnectButton.setEnabled(false);
 		
 		this.layout.putConstraint(SpringLayout.NORTH, connectButton, 5, SpringLayout.NORTH, contentPane);
 		this.layout.putConstraint(SpringLayout.WEST, connectButton, 5, SpringLayout.WEST, contentPane);
@@ -80,11 +85,15 @@ public class GUI implements Observer, ActionListener {
 			try {
 				controller.Connect("127.0.0.1:4444");
 				controller.sendJoin();
+				connectButton.setEnabled(false);
+				disconnectButton.setEnabled(true);
 				initKeys();
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
+		} else if(op == "Disconnect") {
+			
 		}
 	}
     private void initKeys() {

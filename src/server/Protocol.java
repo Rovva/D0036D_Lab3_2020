@@ -1,6 +1,7 @@
 package server;
 
 import shared.GameState;
+import shared.Messages;
 
 import java.awt.Point;
 import java.io.IOException;
@@ -38,13 +39,13 @@ public class Protocol {
         }
 	}
 	
-	private void sendToAll(String message) throws IOException {
+	private void sendToAll(byte[] data) throws IOException {
 		for(int i = 0; i < threads.size(); i++) {
-			threads.get(i).sendMessage(message);
+			threads.get(i).sendMessage(data);
 		}
 	}
 	
-	private String newPlayer() {
+	private byte[] newPlayer() {
 		int ID, x, y;
 		Random randX = new Random();
 		Random randY = new Random();
@@ -53,8 +54,14 @@ public class Protocol {
 		ID = serverGameState.numberOfPlayers();
 		System.out.println("THE ID IS " + ID);
 		serverGameState.newPlayer(ID, new Point(x, y));
-		int[] returnvalue = {ID, x, y};
-		return String.valueOf(ID) + " " + String.valueOf(x) + " " + String.valueOf(y);
+		//int[] returnvalue = {ID, x, y};
+		byte[] data = new byte[4];
+		data[0] = (byte) Messages.JOIN.ordinal();
+		data[1] = (byte) ID;
+		data[2] = (byte) x;
+		data[3] = (byte) y;
+		return data;
+		//return String.valueOf(ID) + " " + String.valueOf(x) + " " + String.valueOf(y);
 	}
 	
 	private boolean canPlayerMove(int ID, int direction) {
@@ -91,7 +98,7 @@ public class Protocol {
 		return true;
 	}
 	
-	public String movePlayer(int ID, int direction) {
+	public byte[] movePlayer(int ID, int direction) {
 		int originalX = 0, originalY = 0, newX = 0, newY = 0;
 		
 		for(int i = 0; i < serverGameState.numberOfPlayers(); i++) {
@@ -113,9 +120,9 @@ public class Protocol {
 		} else if(direction == 4) {
 			newY = originalY + 1;
 		}
-		int[] returnValue = {ID, newX, newY};
+		byte[] returnValue = {(byte) ID,(byte) newX,(byte) newY};
 		serverGameState.getPlayers().get(ID).setLocation(new Point(newX, newY));
-		return ID + " " + newX + " " + newY;
+		return returnValue;
 	}
 	
 	public void resetGame() throws IOException {
@@ -131,33 +138,52 @@ public class Protocol {
 			listY.add(y);
 			placesTaken.add(new Point(x, y));
 		}
-		
+		byte[] sendValues = new byte[4];
 		for(int i = 0; i < serverGameState.numberOfPlayers(); i++) {
 			ID = serverGameState.getPlayers().get(i).getID();
 			serverGameState.getPlayers().get(i).setLocation(placesTaken.get(i));
-			sendToAll("_RESET_ " + String.valueOf(ID) + " " + String.valueOf(listX.get(i)) + 
-					" " + String.valueOf(listY.get(i)));
+			sendValues[0] = (byte) Messages.RESET.ordinal();
+			sendValues[1] = (byte) ID;
+			sendValues[2] = (byte) listX.get(i).byteValue();
+			sendValues[3] = (byte) listY.get(i).byteValue();
+			sendToAll(sendValues);
+			//sendToAll("_RESET_ " + String.valueOf(ID) + " " + String.valueOf(listX.get(i)) + 
+			//		" " + String.valueOf(listY.get(i)));
 		}
 		
 		
 	}
 	
-    public void processInput(String theInput, ServerThread lol) throws IOException {
-    	System.out.println("Server got: " + theInput);
-    	String[] message = theInput.split(" ");
-    	if(theInput.contains("_JOIN_")) {
-    		String newplayer = newPlayer();
-    		String returnvalue = "_NEWPLAYER_ " + newplayer;
-    		System.out.println("Server: " + returnvalue);
-    		sendToAll(returnvalue);
+    public void processInput(byte[] data, ServerThread lol) throws IOException {
+    	System.out.println("Server got: " + (int) data[0]);
+    	//String[] message = theInput.split(" ");
+    	
+    	if((int) data[0] == Messages.JOIN.ordinal()) {
+    		System.out.println("Adding new player...");
+    		byte[] newplayer = newPlayer();
+    		//String returnvalue = "_NEWPLAYER_ " + newplayer;
+    		//System.out.println("Server: " + returnvalue);
+    		sendToAll(newplayer);
     		resetGame();
-    	} else if(message[0].contains("_MOVE_REQ_")) {
-    		String[] split = theInput.split(" ");
-    		if(canPlayerMove(Integer.parseInt(split[1]), Integer.parseInt(split[2]))) {
-    			String moveplayer = movePlayer(Integer.parseInt(split[1]), Integer.parseInt(split[2]));
-    			System.out.println("_MOVE_ " + moveplayer);
-    			sendToAll("_MOVE_ " + moveplayer);
+    	} else if((int) data[0] == Messages.MOVE.ordinal()) {
+    		
+    		if(canPlayerMove((int) data[1], (int) data[2])) {
+    			byte[] temp = new byte[3];
+    			byte[] movePlayer = new byte[4];
+    			temp = movePlayer((int) data[1], (int) data[2]);
+    			movePlayer[0] = (byte) Messages.PLAYER_MOVED.ordinal();
+    			movePlayer[1] = temp[0];
+    			movePlayer[2] = temp[1];
+    			movePlayer[3] = temp[2];
+    			sendToAll(movePlayer);
     		}
+    		
+    		//String[] split = theInput.split(" ");
+    		//if(canPlayerMove(Integer.parseInt(split[1]), Integer.parseInt(split[2]))) {
+    		//	String moveplayer = movePlayer(Integer.parseInt(split[1]), Integer.parseInt(split[2]));
+    		//	System.out.println("_MOVE_ " + moveplayer);
+    			//sendToAll("_MOVE_ " + moveplayer);
+    	//	}
     	}
     }
     

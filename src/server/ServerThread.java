@@ -15,8 +15,9 @@ public class ServerThread extends Thread {
         this.proto = proto;
     }
     
-    public void sendMessage(String message) throws IOException {
-    	out.writeUTF(message);
+    public void sendMessage(byte[] data) throws IOException {
+    	out.write(data);
+    	//out.writeUTF(message);
     	out.flush();
     }
      
@@ -33,10 +34,12 @@ public class ServerThread extends Thread {
             out.flush();
             */
             for(;;) {
-                inputLine = in.readUTF();
-                if(inputLine != null) {
-                    System.out.println(inputLine);
-                    proto.processInput(inputLine, this);
+            	byte[] data = new byte[4];
+            	in.read(data);
+                //inputLine = in.readUTF();
+                if(data != null) {
+                    System.out.println(data);
+                    proto.processInput(data, this);
                 }
             }
 			} catch (IOException e) {

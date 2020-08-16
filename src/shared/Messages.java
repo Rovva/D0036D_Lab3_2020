@@ -4,13 +4,9 @@ public enum Messages {
 	JOIN,
 	LEAVE,
 	MOVE,
-	CANNOT_MOVE,
-	ERROR
+	RESET,
+	PLAYER_MOVED,
+	PLAYER_HIT,
+	PLAYER_KILLED,
+	PLAYER_WON
 }
-
-/*
-JOIN			Response: ID joined
-LEAVE			Response: ID left
-MOVE			Response: ID moved to position
-CANNOT_MOVE		Response: duh
-*/

@@ -15,6 +15,7 @@ import java.awt.event.KeyListener;
 
 import client.GUI;
 import shared.GameState;
+import shared.Messages;
 
 public class Controller extends Observable {
 	
@@ -64,17 +65,38 @@ public class Controller extends Observable {
 			this.state = state;
 		}
 		
-		public void messageProcessor(String input) {
-			String[] message = input.split(" ");
-			if(message[0].contains("_NEWPLAYER_")) {
+		public void messageProcessor(byte[] data) {
+			//String[] message = input.split(" ");
+			if((int) data[0] == Messages.JOIN.ordinal()) {
+				
+				System.out.println("Adding in client: " + (int) data[1] + " " + (int) data[2] + " " + (int) data[3]);
+				
+				int newID = data[1];
+				int newX = data[2];
+				int newY = data[3];
+				
+				this.state.newPlayer(newID, new Point(newX, newY));
+				/*
 				String[] temp = input.split(" ");
 				int newID = Integer.parseInt(temp[1]);
 				int newX = Integer.parseInt(temp[2]);
 				int newY = Integer.parseInt(temp[3]);
-				//System.out.println("Adding " + newID + " " + newX + " " + newY);
-				//this.state.newPlayer(newID, new Point(newX, newY));
+				System.out.println("Adding " + newID + " " + newX + " " + newY);
+				this.state.newPlayer(newID, new Point(newX, newY));
+				*/
+			} else if((int) data[0] == Messages.PLAYER_MOVED.ordinal()) {
+				int moveID = (int) data[1];
+				int moveX = (int) data[2];
+				int moveY = (int) data[3];
+				System.out.println(checkIfExist(moveID));
+				if(checkIfExist(moveID)) {
+					this.state.movePlayer(moveID, moveX, moveY);
+				} else {
+					System.out.println("Adding in client: " + moveID + " " + moveX + " " + moveY);
+					this.state.newPlayer(moveID, new Point(moveX, moveY));
+				}
 				
-			} else if(message[0].contains("_MOVE_")) {
+				/*
 				String[] moveValues = input.split(" ");
 				int moveID = Integer.parseInt(moveValues[1]);
 				int moveX = Integer.parseInt(moveValues[2]);
@@ -86,7 +108,19 @@ public class Controller extends Observable {
 					System.out.println("Adding " + moveID + " " + moveX + " " + moveY);
 					//this.state.newPlayer(moveID, new Point(moveX, moveY));
 				}
-			} else if(message[0].contains("_RESET_")) {
+				*/
+			} else if(data[0] == Messages.RESET.ordinal()) {
+				int resetID = (int) data[1];
+				int resetX = (int) data[2];
+				int resetY = (int) data[3];
+				System.out.println(checkIfExist(resetID));
+				if(!checkIfExist(resetID)) {
+					this.state.newPlayer(resetID, new Point(resetX, resetY));
+				} else {
+					this.state.movePlayer(resetID, resetX, resetY);
+				}
+				
+				/*
 				String[] resetValues = input.split(" ");
 				int resetID = Integer.parseInt(resetValues[1]);
 				int resetX = Integer.parseInt(resetValues[2]);
@@ -96,20 +130,38 @@ public class Controller extends Observable {
 				} else {
 					this.state.movePlayer(resetID, resetX, resetY);
 				}
+				*/
+			} else if(data[0] == Messages.LEAVE.ordinal()) {
+				int leaveID = data[1];
+				if(checkIfExist(leaveID));
+				
+				/*
+				String[] leaveValues = input.split(" ");
+				int leaveID = Integer.parseInt(leaveValues[1]);
+				if(checkIfExist(leaveID)) {
+					this.state.removePlayer(leaveID);
+				}
+				*/
 			}
 			setChanged();
 			notifyObservers();
 		}
 		
 		public void run() {
-        String inputLine;
+        //String inputLine;
+        byte[] data = new byte[4];
 		System.out.println("Starting messageReader...");
         for(;;) {
             try {
-				inputLine = in.readUTF();
+				/*inputLine = in.readUTF();
 	            if(inputLine != null) {
 	                System.out.println(inputLine);
 	                messageProcessor(inputLine);
+	            }*/
+	            in.read(data);
+	            if(data != null) {
+	            	System.out.println(data);
+	            	messageProcessor(data);
 	            }
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
@@ -129,14 +181,22 @@ public class Controller extends Observable {
 	}
 	
 	public void sendJoin() throws IOException {
-		String message = "_JOIN_";
-		out.writeUTF(message);
-		String answer = in.readUTF();
-		System.out.println(answer);
-		String[] playerValues = answer.split(" ");
-		int playerID = Integer.parseInt(playerValues[1]);
-		int playerX = Integer.parseInt(playerValues[2]);
-		int playerY = Integer.parseInt(playerValues[3]);
+
+		//String message = "_JOIN_";
+		out.writeByte(Messages.JOIN.ordinal());
+		//out.writeUTF(message);
+		//String answer = in.readUTF();
+		byte[] data = new byte[4];
+		in.read(data);
+		System.out.println("Recieved after join: " + data[0] + " " + data[1] + " " + data[2]);
+		//String[] playerValues = answer.split(" ");
+		//int playerID = Integer.parseInt(playerValues[1]);
+		//int playerX = Integer.parseInt(playerValues[2]);
+		//int playerY = Integer.parseInt(playerValues[3]);
+
+		int playerID = data[1];
+		int playerX = data[2];
+		int playerY = data[3];
 		
 		gameState.newPlayer(playerID, new Point(playerX, playerY));
 		gameState.setPlayerID(playerID);
@@ -145,8 +205,13 @@ public class Controller extends Observable {
 	}
 	
 	public void sendMove(int direction) throws IOException {
-		String message = "_MOVE_REQ_ " + String.valueOf(gameState.getPlayerID()) + " " + String.valueOf(direction);
-		out.writeUTF(message);
+		//String message = "_MOVE_REQ_ " + String.valueOf(gameState.getPlayerID()) + " " + String.valueOf(direction);
+		//out.writeUTF(message);
+		byte[] data = new byte[4];
+		data[0] = (byte) Messages.MOVE.ordinal();
+		data[1] = (byte) gameState.getPlayerID();
+		data[2] = (byte) direction;
+		out.write(data);
 	}
 	
 }
