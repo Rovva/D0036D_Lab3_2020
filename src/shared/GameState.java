@@ -37,7 +37,8 @@ public class GameState extends Observable {
 	
 	public void newPlayer(int ID, Point location) {
 		this.players.add(new Player(ID, location));
-		System.out.println(players.size());
+		this.revivePlayer(ID);
+		
 		setChanged();
         notifyObservers();
 	}
@@ -48,6 +49,8 @@ public class GameState extends Observable {
 				players.remove(i);
 			}
 		}
+		setChanged();
+        notifyObservers();
 	}
 	
 	public void movePlayer(int ID, int x, int y) {
@@ -66,6 +69,8 @@ public class GameState extends Observable {
 				players.get(i).setDead();
 			}
 		}
+		setChanged();
+        notifyObservers();
 	}
 	
 	public void revivePlayer(int ID) {
@@ -74,13 +79,16 @@ public class GameState extends Observable {
 				players.get(i).setLiving();
 			}
 		}
+		setChanged();
+        notifyObservers();
 	}
 	
-	public void checkDead(int ID) {
+	public boolean checkDead(int ID) {
 		for(int i = 0; i < players.size(); i++) {
 			if(players.get(i).getID() == ID) {
-				
+				return players.get(i).isDead();
 			}
 		}
+		return false;
 	}
 }

@@ -62,6 +62,7 @@ public class GUI implements Observer, ActionListener {
 		this.layout.putConstraint(SpringLayout.NORTH, disconnectButton, 5, SpringLayout.NORTH, contentPane);
 		this.layout.putConstraint(SpringLayout.EAST, disconnectButton, -5, SpringLayout.EAST, contentPane);
 		
+		
 		this.gamePanel = new GamePanel(gameState);
 		this.contentPane.add(gamePanel);
 		this.gamePanel.setFocusable(true);
@@ -71,6 +72,7 @@ public class GUI implements Observer, ActionListener {
         gameState.addObserver(this);
         
 		this.layout.putConstraint(SpringLayout.NORTH, gamePanel, 5, SpringLayout.SOUTH, connectButton);
+		
 		connectWindow = new ConnectWindow();
 		connectWindow.setInvisible();
 		connectWindow.getConnectButton().addActionListener(this);
@@ -138,9 +140,16 @@ public class GUI implements Observer, ActionListener {
     			        	System.out.println("Down");
     			        	//gameState.movePlayer(4);
     			        	direction = 4;
+    			        } else if(keyCode == KeyEvent.VK_SPACE) {
+    			        	System.out.println("Hit");
+    			        	direction = 5;
     			        }
 			        	try {
-							controller.sendMove(direction);
+			        		if(direction == 5) {
+			        			controller.sendHit();
+			        		} else {
+								controller.sendMove(direction);
+			        		}
 						} catch (IOException e) {
 							// TODO Auto-generated catch block
 							//e.printStackTrace();

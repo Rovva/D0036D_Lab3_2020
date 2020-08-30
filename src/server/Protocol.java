@@ -118,6 +118,59 @@ public class Protocol {
 		return returnValue;
 	}
 	
+	public int canKillWho(int ID, int direction) {
+		int originalX = 0, originalY = 0;
+		for(int i = 0; i < serverGameState.numberOfPlayers(); i++) {
+			if(serverGameState.getPlayers().get(i).getID() == ID) {
+				originalX = serverGameState.getPlayers().get(i).getLocation().x;
+				originalY = serverGameState.getPlayers().get(i).getLocation().y;
+			}
+		}
+		
+		if(direction == 1) {
+			for(int i = 0; i < serverGameState.numberOfPlayers(); i++) {
+				if(serverGameState.getPlayers().get(i).getLocation().x == (originalX-1) && 
+						serverGameState.getPlayers().get(i).getLocation().y == originalY) {
+					return i;
+				}
+			}
+		} else if(direction == 2) {
+			for(int i = 0; i < serverGameState.numberOfPlayers(); i++) {
+				if(serverGameState.getPlayers().get(i).getLocation().x == originalX && 
+						serverGameState.getPlayers().get(i).getLocation().y == (originalY-1)) {
+					return i;
+				}
+			}
+		} else if(direction == 3) {
+			for(int i = 0; i < serverGameState.numberOfPlayers(); i++) {
+				if(serverGameState.getPlayers().get(i).getLocation().x == (originalX+1) && 
+						serverGameState.getPlayers().get(i).getLocation().y == originalY) {
+					return i;
+				}
+			}
+		} else if(direction == 4) {
+			for(int i = 0; i < serverGameState.numberOfPlayers(); i++) {
+				if(serverGameState.getPlayers().get(i).getLocation().x == originalX && 
+						serverGameState.getPlayers().get(i).getLocation().y == (originalY+1)) {
+					return i;
+				}
+			}
+		}
+		return -1;
+	}
+	
+	public boolean checkIfDead(int ID) {
+		if(serverGameState.checkDead(ID)) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+	
+	public void killPlayer(int ID) {
+		serverGameState.getPlayers().get(ID).setDead();
+	}
+	
 	public void removePlayer(int ID) {
 		for(int i = 0; i < serverGameState.numberOfPlayers(); i++) {
 			if(serverGameState.getPlayers().get(i).getID() == ID) {
@@ -143,6 +196,7 @@ public class Protocol {
 		for(int i = 0; i < serverGameState.numberOfPlayers(); i++) {
 			ID = serverGameState.getPlayers().get(i).getID();
 			serverGameState.getPlayers().get(i).setLocation(placesTaken.get(i));
+			serverGameState.getPlayers().get(i).setLiving();
 			sendValues[0] = (byte) Messages.RESET.ordinal();
 			sendValues[1] = (byte) ID;
 			sendValues[2] = (byte) listX.get(i).byteValue();
@@ -161,14 +215,35 @@ public class Protocol {
     		resetGame();
     	} else if(data[0] == Messages.MOVE.ordinal()) {
     		if(canPlayerMove((int) data[1], (int) data[2])) {
-    			byte[] temp = new byte[3];
-    			byte[] movePlayer = new byte[4];
-    			temp = movePlayer((int) data[1], (int) data[2]);
-    			movePlayer[0] = (byte) Messages.PLAYER_MOVED.ordinal();
-    			movePlayer[1] = temp[0];
-    			movePlayer[2] = temp[1];
-    			movePlayer[3] = temp[2];
-    			sendToAll(movePlayer);
+    			if(!checkIfDead((int) data[1])) {
+        			byte[] temp = new byte[3];
+        			byte[] movePlayer = new byte[4];
+        			temp = movePlayer((int) data[1], (int) data[2]);
+        			movePlayer[0] = (byte) Messages.PLAYER_MOVED.ordinal();
+        			movePlayer[1] = temp[0];
+        			movePlayer[2] = temp[1];
+        			movePlayer[3] = temp[2];
+        			sendToAll(movePlayer);
+    			}
+    		}
+    	} else if(data[0] == Messages.PLAYER_HIT.ordinal()) {
+    		int killedID = -1;
+    		byte[] killPlayer;
+    		
+    		for(int i = 1; i <= 4; i++) {
+    			killedID = -1;
+    			killedID = canKillWho((int) data[1], i);
+    			killPlayer = new byte[2];
+    			System.out.println("Checking nearby players...");
+    			if(killedID != -1) {
+    				if(!checkIfDead(killedID)) {
+    					System.out.println("Killed player: " + killedID);
+        				killPlayer(killedID);
+        				killPlayer[0] = (byte) Messages.PLAYER_KILLED.ordinal();
+        				killPlayer[1] = (byte) killedID;
+        				sendToAll(killPlayer);
+    				}
+    			}
     		}
     	} else if(data[0] == Messages.LEAVE.ordinal()) {
     		byte[] temp = new byte[2];

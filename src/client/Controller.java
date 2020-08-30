@@ -84,6 +84,7 @@ public class Controller extends Observable {
 				int newY = data[3];
 				
 				this.state.newPlayer(newID, new Point(newX, newY));
+		        
 			} else if(data[0] == Messages.PLAYER_MOVED.ordinal()) {
 				int moveID = (int) data[1];
 				int moveX = (int) data[2];
@@ -93,8 +94,13 @@ public class Controller extends Observable {
 				} else {
 					this.state.newPlayer(moveID, new Point(moveX, moveY));
 				}
-			} else if(data[0] == Messages.PLAYER_HIT.ordinal()) {
-				
+			} else if(data[0] == Messages.PLAYER_KILLED.ordinal()) {
+				System.out.println("Killed player ID: " + (int) data[1]);
+				int killID = (int) data[1];
+				if(checkIfExist(killID)) {
+					this.state.killPlayer(killID);
+				}
+				this.state.killPlayer(killID);
 			} else if(data[0] == Messages.RESET.ordinal()) {
 				int resetID = (int) data[1];
 				int resetX = (int) data[2];
@@ -103,6 +109,7 @@ public class Controller extends Observable {
 					this.state.newPlayer(resetID, new Point(resetX, resetY));
 				} else {
 					this.state.movePlayer(resetID, resetX, resetY);
+					this.state.revivePlayer(resetID);
 				}
 			} else if(data[0] == Messages.LEAVE.ordinal()) {
 				int leaveID = data[1];
@@ -110,8 +117,6 @@ public class Controller extends Observable {
 					this.state.removePlayer(leaveID);
 				}
 			}
-			setChanged();
-			notifyObservers();
 		}
 		
 		public void run() {
@@ -161,11 +166,13 @@ public class Controller extends Observable {
 	}
 	
 	public void sendMove(int direction) throws IOException {
-		byte[] data = new byte[4];
-		data[0] = (byte) Messages.MOVE.ordinal();
-		data[1] = (byte) gameState.getPlayerID();
-		data[2] = (byte) direction;
-		out.write(data);
+		if(!gameState.checkDead(gameState.getPlayerID())) {
+			byte[] data = new byte[4];
+			data[0] = (byte) Messages.MOVE.ordinal();
+			data[1] = (byte) gameState.getPlayerID();
+			data[2] = (byte) direction;
+			out.write(data);
+		}
 	}
 	
 	public void sendLeave() throws IOException {
@@ -176,10 +183,12 @@ public class Controller extends Observable {
 	}
 	
 	public void sendHit() throws IOException {
-		byte[] data = new byte[2];
-		data[0] = (byte) Messages.PLAYER_HIT.ordinal();
-		data[1] = (byte) gameState.getPlayerID();
-		out.write(data);
+		if(!gameState.checkDead(gameState.getPlayerID())) {
+			byte[] data = new byte[2];
+			data[0] = (byte) Messages.PLAYER_HIT.ordinal();
+			data[1] = (byte) gameState.getPlayerID();
+			out.write(data);
+		}
 	}
 	
 }

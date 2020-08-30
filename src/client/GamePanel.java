@@ -39,8 +39,13 @@ public class GamePanel extends JPanel implements Observer {
 	
 	private void paintCircles(Graphics g) {
 		for(int i = 0; i < gameState.numberOfPlayers(); i++) {
-			if(gameState.getPlayers().get(i).getID() == gameState.getPlayerID()) {
-				g.setColor(Color.blue);
+			if(gameState.getPlayers().get(i).getID() == gameState.getPlayerID() && 
+						gameState.getPlayers().get(i).isDead()) {
+					g.setColor(Color.black);
+			} else if(gameState.getPlayers().get(i).getID() == gameState.getPlayerID()) {
+					g.setColor(Color.blue);
+			} else if(gameState.getPlayers().get(i).isDead()) {
+				g.setColor(Color.black);
 			} else {
 				g.setColor(Color.red);
 			}
