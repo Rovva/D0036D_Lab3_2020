@@ -208,6 +208,24 @@ public class Protocol {
 		}
 	}
 	
+	public boolean isEveryoneButOneDead() {
+		if(serverGameState.numberOfPlayers() >= 2) {
+			int deadCount = 0;
+			for(int i = 0; i < serverGameState.numberOfPlayers(); i++) {
+				if(serverGameState.getPlayers().get(i).isDead() == true) {
+					deadCount++;
+				}
+			}
+			if(deadCount == (serverGameState.numberOfPlayers() - 1)) {
+				return true;
+			} else {
+				return false;
+			}
+		} else {
+			return false;
+		}
+	}
+	
 	// resetGame is the method to restart the game and randomize all the player locations.
 	public void resetGame() throws IOException {
 		int x = 0, lastX = 0, y = 0, lastY = 0, ID = 0;
@@ -248,13 +266,14 @@ public class Protocol {
 			sendToAll(sendValues);
 		}
 		
-		
 	}
 	
     public void processInput(byte[] data, ServerThread thread) throws IOException {
     	// If the message is JOIN, add the new player to gamestate and announce to
     	// all clients the new players id.
-    	if(data[0] == Messages.JOIN.ordinal()) {
+    	if(isEveryoneButOneDead()) {
+    		resetGame();
+    	} else if(data[0] == Messages.JOIN.ordinal()) {
     		System.out.println("Adding new player...");
     		byte[] newplayer = newPlayer();
     		sendToAll(newplayer);
