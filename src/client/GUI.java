@@ -87,8 +87,12 @@ public class GUI implements Observer, ActionListener {
 	@Override
 	public void actionPerformed(ActionEvent arg0) {
 		String op = arg0.getActionCommand();
+		// User clicks on Connect button, show the connection window.
 		if(op == "Connect") {
 			connectWindow.setVisible();
+		// If user clicks on Disconnect button, disconnect from server, set
+		// Connect buttton clickable, make Disconnect button unclickable and
+		// set the gamepanel as invisible.
 		} else if(op == "Disconnect") {
 			try {
 				controller.Disconnect();
@@ -99,6 +103,9 @@ public class GUI implements Observer, ActionListener {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
+		// When user clicks on Join button, connect to the ip address and port
+		// specified, send join request to server, disable Connect button and enable
+		// Disconnect button, make the gamepanel visible and make Connection window invisible.
 		} else if(op == "Join") {
 			String addressField = connectWindow.getTextField().getText();
 			try {
@@ -113,6 +120,7 @@ public class GUI implements Observer, ActionListener {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
+		// When user clicks on the Cancel button in the Connection window, make the window invisible.
 		} else if(op == "Cancel") {
 			connectWindow.setInvisible();
 		}
@@ -124,6 +132,8 @@ public class GUI implements Observer, ActionListener {
     				public void keyPressed(KeyEvent ke) {
     			        int keyCode = ke.getKeyCode();
     			        int direction = 0;
+    			        
+    			        // Check if any of the pressed keys are valid.
     			        if(keyCode == KeyEvent.VK_LEFT) {
     			        	System.out.println("Left");
     			        	//gameState.movePlayer(1);
@@ -145,6 +155,8 @@ public class GUI implements Observer, ActionListener {
     			        	direction = 5;
     			        }
 			        	try {
+			        		// If user has pressed on space key, send shoot
+			        		// request to server, otherwise send move request.
 			        		if(direction == 5) {
 			        			controller.sendHit();
 			        		} else {
@@ -169,6 +181,7 @@ public class GUI implements Observer, ActionListener {
 					}
     			});
     }
+    
 	@Override
 	public void update(Observable arg0, Object arg1) {
 		// TODO Auto-generated method stub

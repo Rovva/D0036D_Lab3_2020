@@ -1,3 +1,5 @@
+/* GameState is responsible for keeping track of players. */
+
 package shared;
 
 import java.awt.Color;
@@ -34,7 +36,7 @@ public class GameState extends Observable {
 	public ArrayList<Player> getPlayers() {
 		return this.players;
 	}
-	
+	// Add new player.
 	public void newPlayer(int ID, Point location) {
 		this.players.add(new Player(ID, location));
 		this.revivePlayer(ID);
@@ -43,6 +45,7 @@ public class GameState extends Observable {
         notifyObservers();
 	}
 	
+	// Remove player.
 	public void removePlayer(int ID) {
 		for(int i = 0; i < players.size(); i++) {
 			if(players.get(i).getID() == ID) {
@@ -53,6 +56,7 @@ public class GameState extends Observable {
         notifyObservers();
 	}
 	
+	// Move the player.
 	public void movePlayer(int ID, int x, int y) {
 		for(int i = 0; i < players.size(); i++) {
 			if(players.get(i).getID() == ID) {
@@ -63,6 +67,7 @@ public class GameState extends Observable {
         notifyObservers();
 	}
 	
+	// Kill player.
 	public void killPlayer(int ID) {
 		for(int i = 0; i < players.size(); i++) {
 			if(players.get(i).getID() == ID) {
@@ -73,6 +78,7 @@ public class GameState extends Observable {
         notifyObservers();
 	}
 	
+	// Revive the player.
 	public void revivePlayer(int ID) {
 		for(int i = 0; i < players.size(); i++) {
 			if(players.get(i).getID() == ID) {
@@ -83,6 +89,7 @@ public class GameState extends Observable {
         notifyObservers();
 	}
 	
+	// Check if the player is dead.
 	public boolean checkDead(int ID) {
 		for(int i = 0; i < players.size(); i++) {
 			if(players.get(i).getID() == ID) {

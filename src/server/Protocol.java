@@ -27,6 +27,8 @@ public class Protocol {
 		boolean listening = true;
 		try (ServerSocket serverSocket = new ServerSocket(this.portNumber)) { 
 			int i = 0;
+			// While listening is true, listen to incoming connections and
+			// start a new ServerThread thread.
             while (listening) {
             	System.out.println("Listening and stuff at port: " + this.portNumber);
                 threads.add(new ServerThread(serverSocket.accept(), this));
@@ -39,12 +41,16 @@ public class Protocol {
         }
 	}
 	
+	// This method loops through all the threads stored in a ArrayList and
+	// calls the method sendMessage that sends data to the connected client.
 	private void sendToAll(byte[] data) throws IOException {
 		for(int i = 0; i < threads.size(); i++) {
 			threads.get(i).sendMessage(data);
 		}
 	}
 	
+	// This method adds a new player returns a valid ID and a random location
+	// that the player will start at.
 	private byte[] newPlayer() {
 		int ID, x, y;
 		Random randX = new Random();
@@ -61,17 +67,23 @@ public class Protocol {
 		return data;
 	}
 	
+	// Checks if it is possible to move or if the space is occupied.
 	private boolean canPlayerMove(int ID, int direction) {
 		int originalX = 0, originalY = 0, newX = 0, newY = 0;
 		
+		// Go through all players and if the ID is the same as that particular
+		// player, retrieve the players location and save in originalX and originalY.
 		for(int i = 0; i < serverGameState.numberOfPlayers(); i++) {
 			if(serverGameState.getPlayers().get(i).getID() == ID) {
 				originalX = serverGameState.getPlayers().get(i).getLocation().x;
 				originalY = serverGameState.getPlayers().get(i).getLocation().y;
 			}
 		}
+		
 		newX = originalX;
 		newY = originalY;
+		
+		// Depending on direction change coordinates for the new potential location.
 		if(direction == 1) {
 			newX--;
 		} else if(direction == 2) {
@@ -82,18 +94,23 @@ public class Protocol {
 			newY++;
 		}
 		
+		// Go through all players and check if another player already occupies the new location.
 		for(int i = 0; i < serverGameState.numberOfPlayers(); i++) {
 			if(serverGameState.getPlayers().get(i).getLocation().x == newX && 
 					serverGameState.getPlayers().get(i).getLocation().y == newY) {
+				// Return false as the new location is already occupied.
 				return false;
 			}
 		}
+		// Return true because no player occupies the new location.
 		return true;
 	}
 	
+	// The method to move a player to another location.
 	public byte[] movePlayer(int ID, int direction) {
 		int originalX = 0, originalY = 0, newX = 0, newY = 0;
 		
+		// Retrive the old location of the player.
 		for(int i = 0; i < serverGameState.numberOfPlayers(); i++) {
 			if(serverGameState.getPlayers().get(i).getID() == ID) {
 				originalX = serverGameState.getPlayers().get(i).getLocation().x;
@@ -104,6 +121,7 @@ public class Protocol {
 		newX = originalX;
 		newY = originalY;
 		
+		// Set new location depending on what direction the player moves in.
 		if(direction == 1) {
 			newX = originalX - 1;
 		} else if(direction == 2) {
@@ -113,13 +131,21 @@ public class Protocol {
 		} else if(direction == 4) {
 			newY = originalY + 1;
 		}
+		
 		byte[] returnValue = {(byte) ID,(byte) newX,(byte) newY};
+		
+		// Change the location for the player in the gamestate.
 		serverGameState.getPlayers().get(ID).setLocation(new Point(newX, newY));
+		
+		// Return a valid byte array that will be used to send updates to all clients.
 		return returnValue;
 	}
 	
+	// This method checks who the player might be able to kill and returns what player occupies that space.
 	public int canKillWho(int ID, int direction) {
 		int originalX = 0, originalY = 0;
+		
+		// Retrieve the location of the player that want to shoot.
 		for(int i = 0; i < serverGameState.numberOfPlayers(); i++) {
 			if(serverGameState.getPlayers().get(i).getID() == ID) {
 				originalX = serverGameState.getPlayers().get(i).getLocation().x;
@@ -127,6 +153,8 @@ public class Protocol {
 			}
 		}
 		
+		// Loop through all players locations to check if anyone is on the specified location
+		// a player can shoot.
 		if(direction == 1) {
 			for(int i = 0; i < serverGameState.numberOfPlayers(); i++) {
 				if(serverGameState.getPlayers().get(i).getLocation().x == (originalX-1) && 
@@ -156,6 +184,7 @@ public class Protocol {
 				}
 			}
 		}
+		// If the player cannot kill anyone, return -1.
 		return -1;
 	}
 	
@@ -179,28 +208,43 @@ public class Protocol {
 		}
 	}
 	
+	// resetGame is the method to restart the game and randomize all the player locations.
 	public void resetGame() throws IOException {
 		int x = 0, lastX = 0, y = 0, lastY = 0, ID = 0;
-		ArrayList<Integer> listX = new ArrayList<Integer>();
-		ArrayList<Integer> listY = new ArrayList<Integer>();
+		boolean isUnique = false;
+		
 		Random rand = new Random();
+		
 		ArrayList<Point> placesTaken = new ArrayList<Point>();
+		
+		// Go through all players and randomize locations and store the taken
+		// locations in the ArrayList placesTaken.
 		for(int i = 0; i < serverGameState.numberOfPlayers(); i++) {
+			isUnique = true;
 			x = rand.nextInt(30);
 			y = rand.nextInt(30);
-			listX.add(x);
-			listY.add(y);
-			placesTaken.add(new Point(x, y));
+			for(int j = 0; j < placesTaken.size(); j++) {
+				if(placesTaken.get(j).x == x && placesTaken.get(j).y == y) {
+					isUnique = false;
+				}
+			}
+			if(isUnique) {
+				placesTaken.add(new Point(x, y));
+			} else {
+				i--;
+			}
 		}
+		
 		byte[] sendValues = new byte[4];
+		// Loop through all players and assign the new location and change everyone to "living".
 		for(int i = 0; i < serverGameState.numberOfPlayers(); i++) {
 			ID = serverGameState.getPlayers().get(i).getID();
 			serverGameState.getPlayers().get(i).setLocation(placesTaken.get(i));
 			serverGameState.getPlayers().get(i).setLiving();
 			sendValues[0] = (byte) Messages.RESET.ordinal();
 			sendValues[1] = (byte) ID;
-			sendValues[2] = (byte) listX.get(i).byteValue();
-			sendValues[3] = (byte) listY.get(i).byteValue();
+			sendValues[2] = (byte) placesTaken.get(i).x;
+			sendValues[3] = (byte) placesTaken.get(i).y;
 			sendToAll(sendValues);
 		}
 		
@@ -208,11 +252,16 @@ public class Protocol {
 	}
 	
     public void processInput(byte[] data, ServerThread thread) throws IOException {
+    	// If the message is JOIN, add the new player to gamestate and announce to
+    	// all clients the new players id.
     	if(data[0] == Messages.JOIN.ordinal()) {
     		System.out.println("Adding new player...");
     		byte[] newplayer = newPlayer();
     		sendToAll(newplayer);
     		resetGame();
+    	// When MOVE message is received, first it checks if the move is valid and if the
+    	// player is dead. If not dead and a valid move is possible, announce to all clients
+    	// the new location for the player ID.
     	} else if(data[0] == Messages.MOVE.ordinal()) {
     		if(canPlayerMove((int) data[1], (int) data[2])) {
     			if(!checkIfDead((int) data[1])) {
@@ -226,6 +275,9 @@ public class Protocol {
         			sendToAll(movePlayer);
     			}
     		}
+    	// When the message PLAYER_HIT is received, first check if another player is around
+    	// to kill and then check is the player trying to hit is living or not. If valid
+    	// then announce to all clients who has died.
     	} else if(data[0] == Messages.PLAYER_HIT.ordinal()) {
     		int killedID = -1;
     		byte[] killPlayer;
@@ -245,6 +297,8 @@ public class Protocol {
     				}
     			}
     		}
+    	// When a client sends the LEAVE message then remove the player from gamestate and
+    	// send to all clients which player has left.
     	} else if(data[0] == Messages.LEAVE.ordinal()) {
     		byte[] temp = new byte[2];
     		temp[0] = (byte) Messages.LEAVE.ordinal();

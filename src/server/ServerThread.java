@@ -19,6 +19,7 @@ public class ServerThread extends Thread {
         this.runThread = true;
     }
     
+    // Method to send data to the client.
     public void sendMessage(byte[] data) throws IOException {
     	if(runThread) {
         	out.write(data);
@@ -26,6 +27,7 @@ public class ServerThread extends Thread {
     	}
     }
     
+    // This method is invoked when the thread must close.
     public void stopThread() {
     	this.runThread = false;
     }

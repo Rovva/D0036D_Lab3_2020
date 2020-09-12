@@ -36,6 +36,7 @@ public class Controller extends Observable {
     	gui = new GUI(this, gameState);
     }
     
+    // This method is used to connect to a specified ip address and port number
 	void Connect(String ipPort) throws IOException { 
 		String toParse = ipPort;
 		String delims = "[:]";
@@ -58,6 +59,7 @@ public class Controller extends Observable {
         }
 	}
 	
+	// When a player want to disconnect this method is called.
 	void Disconnect() throws IOException {
 		messages.runThread = false;
 		this.sendLeave();
@@ -65,10 +67,13 @@ public class Controller extends Observable {
 		in.close();
 		socket.close();
 	}
-
+	
+	// messageReader is a thread that is responsible for interpreting 
+	// data recieved from a server.
 	public class messageReader implements Runnable {
 		DataInputStream in;
 		GameState state;
+		// runThread is used to determine if the thread should stop or not.
 		volatile boolean runThread;
 		
 		public messageReader(DataInputStream in, GameState state) {
@@ -77,25 +82,32 @@ public class Controller extends Observable {
 		}
 		
 		public void messageProcessor(byte[] data) {
+			
 			if(data[0] == Messages.JOIN.ordinal()) {
 				
 				int newID = data[1];
 				int newX = data[2];
 				int newY = data[3];
-				
+				// Add the new players data to gameState.
 				this.state.newPlayer(newID, new Point(newX, newY));
 		        
 			} else if(data[0] == Messages.PLAYER_MOVED.ordinal()) {
 				int moveID = (int) data[1];
 				int moveX = (int) data[2];
 				int moveY = (int) data[3];
+				// First check if the player exist already
 				if(checkIfExist(moveID)) {
+					// The player exist so we only need to change it's location.
 					this.state.movePlayer(moveID, moveX, moveY);
 				} else {
+					// The player did not exist so we add the player with recieved location.
 					this.state.newPlayer(moveID, new Point(moveX, moveY));
 				}
 			} else if(data[0] == Messages.PLAYER_KILLED.ordinal()) {
-				System.out.println("Killed player ID: " + (int) data[1]);
+				//System.out.println("Killed player ID: " + (int) data[1]);
+				
+				// First check if the player shot exist and change the gamestate
+				// so that the player is dead and cannot move or shoot.
 				int killID = (int) data[1];
 				if(checkIfExist(killID)) {
 					this.state.killPlayer(killID);
@@ -105,6 +117,11 @@ public class Controller extends Observable {
 				int resetID = (int) data[1];
 				int resetX = (int) data[2];
 				int resetY = (int) data[3];
+				
+				// When reseting the game we need to check if all the players
+				// recieved from the server exist in gamestate already and 
+				// if the player exist, change location and revive him.
+				// Otherwise just simply add the new player.
 				if(!checkIfExist(resetID)) {
 					this.state.newPlayer(resetID, new Point(resetX, resetY));
 				} else {
@@ -113,6 +130,7 @@ public class Controller extends Observable {
 				}
 			} else if(data[0] == Messages.LEAVE.ordinal()) {
 				int leaveID = data[1];
+				// If player exist, remove the player from gamestate.
 				if(checkIfExist(leaveID)) {
 					this.state.removePlayer(leaveID);
 				}
@@ -123,6 +141,8 @@ public class Controller extends Observable {
 	        byte[] data = new byte[4];
 			System.out.println("Starting messageReader...");
 			this.runThread = true;
+			// A loop that runs as long as runThread is true, otherwise
+			// close the thread.
 	        while(runThread) {
 	        	if(!socket.isClosed()) {
 		            try {
@@ -139,6 +159,8 @@ public class Controller extends Observable {
         }
 	}
 	
+	// The method used to checks if a player with a certain ID exist
+	// in the gamestate.
 	public boolean checkIfExist(int ID) {
 		for(int i = 0; i < gameState.numberOfPlayers(); i++) {
 			if(gameState.getPlayers().get(i).getID() == ID) {
@@ -148,23 +170,31 @@ public class Controller extends Observable {
 		return false;
 	}
 	
+	// This method is used when joining a server.
 	public void sendJoin() throws IOException {
+		// First send a message to the server.
 		out.writeByte(Messages.JOIN.ordinal());
 		byte[] data = new byte[4];
+		// Read response and store in the byte array data.
 		in.read(data);
 		System.out.println("Recieved after join: " + data[0] + " " + data[1] + " " + data[2]);
+		// Cast all the data into integer variables.
 		int playerID = data[1];
 		int playerX = data[2];
 		int playerY = data[3];
 		
+		// Add the recieved ID and location to the gamestate and set own ID to the ID
+		// received from server.
 		gameState.newPlayer(playerID, new Point(playerX, playerY));
 		gameState.setPlayerID(playerID);
 		
+		// Start the thread messageReader that will process all the data from server.
 		messages = new messageReader(this.in, this.gameState);
 		thread = new Thread(messages);
 		thread.start();
 	}
 	
+	// Method for sending a request to move oneself in a specified direction to the server.
 	public void sendMove(int direction) throws IOException {
 		if(!gameState.checkDead(gameState.getPlayerID())) {
 			byte[] data = new byte[4];
@@ -175,6 +205,7 @@ public class Controller extends Observable {
 		}
 	}
 	
+	// Method for sending info to server that oneself is leaving.
 	public void sendLeave() throws IOException {
 		byte[] data = new byte[2];
 		data[0] = (byte) Messages.LEAVE.ordinal();
@@ -182,6 +213,7 @@ public class Controller extends Observable {
 		out.write(data);
 	}
 	
+	// Send request to server that we want to shoot.
 	public void sendHit() throws IOException {
 		if(!gameState.checkDead(gameState.getPlayerID())) {
 			byte[] data = new byte[2];

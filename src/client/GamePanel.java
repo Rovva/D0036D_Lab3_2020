@@ -37,15 +37,23 @@ public class GamePanel extends JPanel implements Observer {
 		paintCircles(g);
 	}
 	
+	// Method for painting all the players in the gamepanel.
 	private void paintCircles(Graphics g) {
+		// Loop through all the players.
 		for(int i = 0; i < gameState.numberOfPlayers(); i++) {
+			// First check if the player ID is the same as the users own ID and also
+			// if the player is dead and paint the circle black.
 			if(gameState.getPlayers().get(i).getID() == gameState.getPlayerID() && 
 						gameState.getPlayers().get(i).isDead()) {
 					g.setColor(Color.black);
+			// Then check if the player ID is the same as the users own ID, paint the
+			// the circle blue.
 			} else if(gameState.getPlayers().get(i).getID() == gameState.getPlayerID()) {
 					g.setColor(Color.blue);
+			// Check if the player is dead, then paint circle black.
 			} else if(gameState.getPlayers().get(i).isDead()) {
 				g.setColor(Color.black);
+			// Otherwise paint the circle red.
 			} else {
 				g.setColor(Color.red);
 			}
