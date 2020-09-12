@@ -94,11 +94,13 @@ public class Protocol {
 			newY++;
 		}
 		
+		// Check the position so the player cannot move outside the gameborders.
 		if(newX < 0) {
 			return false;
 		} else if(newY < 0) {
 			return false;
 		}
+		
 		// Go through all players and check if another player already occupies the new location.
 		for(int i = 0; i < serverGameState.numberOfPlayers(); i++) {
 			if(serverGameState.getPlayers().get(i).getLocation().x == newX && 
@@ -115,7 +117,7 @@ public class Protocol {
 	public byte[] movePlayer(int ID, int direction) {
 		int originalX = 0, originalY = 0, newX = 0, newY = 0;
 		
-		// Retrive the old location of the player.
+		// Retrieve the old location of the player.
 		for(int i = 0; i < serverGameState.numberOfPlayers(); i++) {
 			if(serverGameState.getPlayers().get(i).getID() == ID) {
 				originalX = serverGameState.getPlayers().get(i).getLocation().x;
