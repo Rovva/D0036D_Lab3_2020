@@ -94,6 +94,11 @@ public class Protocol {
 			newY++;
 		}
 		
+		if(newX < 0) {
+			return false;
+		} else if(newY < 0) {
+			return false;
+		}
 		// Go through all players and check if another player already occupies the new location.
 		for(int i = 0; i < serverGameState.numberOfPlayers(); i++) {
 			if(serverGameState.getPlayers().get(i).getLocation().x == newX && 
