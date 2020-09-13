@@ -276,20 +276,25 @@ public class Protocol {
 	}
 	
     public void processInput(byte[] data, ServerThread thread) throws IOException {
-    	// If the message is JOIN, add the new player to gamestate and announce to
-    	// all clients the new players id.
+    	
+    	// First check how many is dead, if all but one dead the game resets.
     	if(isEveryoneButOneDead()) {
     		resetGame();
+    		
+    	// If the message is JOIN, add the new player to gamestate and announce to
+        // all clients the new players id.
     	} else if(data[0] == Messages.JOIN.ordinal()) {
     		System.out.println("Adding new player...");
     		byte[] newplayer = newPlayer();
     		sendToAll(newplayer);
     		resetGame();
-    	// When MOVE message is received, first it checks if the move is valid and if the
-    	// player is dead. If not dead and a valid move is possible, announce to all clients
-    	// the new location for the player ID.
+    	// If the message is PLAYER_INPUT then check the last byte to know if the player
+    	// is moving or hitting other players.
     	} else if(data[0] == Messages.PLAYER_INPUT.ordinal()) {
     		if(data[2] <= 4) {
+    			// When player is moving, check if the player can move in the received
+    			// direction and then check if the player is dead. If a player is
+    			// already at the direction or the moving player is dead the move is invalid and ignored.
     			if(canPlayerMove((int) data[1], (int) data[2])) {
 	    			if(!checkIfDead((int) data[1])) {
 	        			byte[] temp = new byte[3];
@@ -306,6 +311,9 @@ public class Protocol {
     			int killedID = -1;
 	    		byte[] killPlayer;
 	    		
+	    		// Loop through all the directions the player is at when the player want to hit
+	    		// someone to check who is there, then check if the player who wants to hit
+	    		// is dead and then kill all the players that is around.
 	    		for(int i = 1; i <= 4; i++) {
 	    			killedID = -1;
 	    			killedID = canKillWho((int) data[1], i);
