@@ -155,13 +155,9 @@ public class GUI implements Observer, ActionListener {
     			        	direction = 5;
     			        }
 			        	try {
-			        		// If user has pressed on space key, send shoot
-			        		// request to server, otherwise send move request.
-			        		if(direction == 5) {
-			        			controller.sendHit();
-			        		} else {
-								controller.sendMove(direction);
-			        		}
+			        		
+			        		controller.sendInput(direction);
+			        		
 						} catch (IOException e) {
 							// TODO Auto-generated catch block
 							//e.printStackTrace();

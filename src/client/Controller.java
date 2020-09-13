@@ -194,15 +194,13 @@ public class Controller extends Observable {
 		thread.start();
 	}
 	
-	// Method for sending a request to move oneself in a specified direction to the server.
-	public void sendMove(int direction) throws IOException {
-		if(!gameState.checkDead(gameState.getPlayerID())) {
-			byte[] data = new byte[4];
-			data[0] = (byte) Messages.MOVE.ordinal();
-			data[1] = (byte) gameState.getPlayerID();
-			data[2] = (byte) direction;
-			out.write(data);
-		}
+	// Method for sending input like move or hit.
+	public void sendInput(int direction) throws IOException {
+		byte[] data = new byte[3];
+		data[0] = (byte) Messages.PLAYER_INPUT.ordinal();
+		data[1] = (byte) gameState.getPlayerID();
+		data[2] = (byte) direction;
+		out.write(data);
 	}
 	
 	// Method for sending info to server that oneself is leaving.
@@ -211,16 +209,6 @@ public class Controller extends Observable {
 		data[0] = (byte) Messages.LEAVE.ordinal();
 		data[1] = (byte) gameState.getPlayerID();
 		out.write(data);
-	}
-	
-	// Send request to server that we want to shoot.
-	public void sendHit() throws IOException {
-		if(!gameState.checkDead(gameState.getPlayerID())) {
-			byte[] data = new byte[2];
-			data[0] = (byte) Messages.PLAYER_HIT.ordinal();
-			data[1] = (byte) gameState.getPlayerID();
-			out.write(data);
-		}
 	}
 	
 }

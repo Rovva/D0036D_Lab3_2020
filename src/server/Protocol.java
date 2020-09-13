@@ -235,7 +235,7 @@ public class Protocol {
 	
 	// resetGame is the method to restart the game and randomize all the player locations.
 	public void resetGame() throws IOException {
-		int x = 0, lastX = 0, y = 0, lastY = 0, ID = 0;
+		int x = 0, y = 0, ID = 0;
 		boolean isUnique = false;
 		
 		Random rand = new Random();
@@ -288,41 +288,40 @@ public class Protocol {
     	// When MOVE message is received, first it checks if the move is valid and if the
     	// player is dead. If not dead and a valid move is possible, announce to all clients
     	// the new location for the player ID.
-    	} else if(data[0] == Messages.MOVE.ordinal()) {
-    		if(canPlayerMove((int) data[1], (int) data[2])) {
-    			if(!checkIfDead((int) data[1])) {
-        			byte[] temp = new byte[3];
-        			byte[] movePlayer = new byte[4];
-        			temp = movePlayer((int) data[1], (int) data[2]);
-        			movePlayer[0] = (byte) Messages.PLAYER_MOVED.ordinal();
-        			movePlayer[1] = temp[0];
-        			movePlayer[2] = temp[1];
-        			movePlayer[3] = temp[2];
-        			sendToAll(movePlayer);
+    	} else if(data[0] == Messages.PLAYER_INPUT.ordinal()) {
+    		if(data[2] <= 4) {
+    			if(canPlayerMove((int) data[1], (int) data[2])) {
+	    			if(!checkIfDead((int) data[1])) {
+	        			byte[] temp = new byte[3];
+	        			byte[] movePlayer = new byte[4];
+	        			temp = movePlayer((int) data[1], (int) data[2]);
+	        			movePlayer[0] = (byte) Messages.PLAYER_MOVED.ordinal();
+	        			movePlayer[1] = temp[0];
+	        			movePlayer[2] = temp[1];
+	        			movePlayer[3] = temp[2];
+	        			sendToAll(movePlayer);
+	    			}
     			}
-    		}
-    	// When the message PLAYER_HIT is received, first check if another player is around
-    	// to kill and then check is the player trying to hit is living or not. If valid
-    	// then announce to all clients who has died.
-    	} else if(data[0] == Messages.PLAYER_HIT.ordinal()) {
-    		int killedID = -1;
-    		byte[] killPlayer;
-    		
-    		for(int i = 1; i <= 4; i++) {
-    			killedID = -1;
-    			killedID = canKillWho((int) data[1], i);
-    			killPlayer = new byte[2];
-    			System.out.println("Checking nearby players...");
-    			if(killedID != -1) {
-    				if(!checkIfDead(killedID)) {
-    					System.out.println("Killed player: " + killedID);
-        				killPlayer(killedID);
-        				killPlayer[0] = (byte) Messages.PLAYER_KILLED.ordinal();
-        				killPlayer[1] = (byte) killedID;
-        				sendToAll(killPlayer);
-    				}
-    			}
-    		}
+    		} else {
+    			int killedID = -1;
+	    		byte[] killPlayer;
+	    		
+	    		for(int i = 1; i <= 4; i++) {
+	    			killedID = -1;
+	    			killedID = canKillWho((int) data[1], i);
+	    			killPlayer = new byte[2];
+	    			System.out.println("Checking nearby players...");
+	    			if(killedID != -1) {
+	    				if(!checkIfDead(killedID)) {
+	    					System.out.println("Killed player: " + killedID);
+	        				killPlayer(killedID);
+	        				killPlayer[0] = (byte) Messages.PLAYER_KILLED.ordinal();
+	        				killPlayer[1] = (byte) killedID;
+	        				sendToAll(killPlayer);
+	    				}
+	    			}
+	    		}
+    		}	
     	// When a client sends the LEAVE message then remove the player from gamestate and
     	// send to all clients which player has left.
     	} else if(data[0] == Messages.LEAVE.ordinal()) {
