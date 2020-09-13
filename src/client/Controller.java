@@ -119,7 +119,7 @@ public class Controller extends Observable {
 				int resetY = (int) data[3];
 				
 				// When reseting the game we need to check if all the players
-				// recieved from the server exist in gamestate already and 
+				// received from the server exist in gamestate already and 
 				// if the player exist, change location and revive him.
 				// Otherwise just simply add the new player.
 				if(!checkIfExist(resetID)) {
@@ -183,7 +183,7 @@ public class Controller extends Observable {
 		int playerX = data[2];
 		int playerY = data[3];
 		
-		// Add the recieved ID and location to the gamestate and set own ID to the ID
+		// Add the received ID and location to the gamestate and set own ID to the ID
 		// received from server.
 		gameState.newPlayer(playerID, new Point(playerX, playerY));
 		gameState.setPlayerID(playerID);

@@ -6,7 +6,6 @@ public class Player {
 	
 	int id;
 	boolean dead;
-	boolean winner;
 	Point location;
 	
 	Player(int id, Point location) {
@@ -36,17 +35,5 @@ public class Player {
 	
 	public boolean isDead() {
 		return this.dead;
-	}
-	
-	public void setWinner() {
-		this.winner = true;
-	}
-	
-	public void setLoser() {
-		this.winner = false;
-	}
-	
-	public boolean isWinner() {
-		return winner;
 	}
 }
